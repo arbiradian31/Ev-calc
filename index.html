@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Calc+ | EV Charging Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #020617;
+            --card: rgba(15, 23, 42, 0.95);
+            --accent: #10b981;
+            --border: #1e293b;
+            --text: #f8fafc;
+            --dim: #94a3b8;
+        }
+        * { box-sizing: border-box; margin:0; padding:0; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            padding: 12px;
+            min-height: 100vh;
+        }
+        .container { width: 100%; max-width: 420px; }
+
+        .header { text-align: center; margin-bottom: 16px; }
+        .brand { font-size: 28px; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
+        .slogan { font-size: 10.5px; color: var(--dim); text-transform: uppercase; letter-spacing: 1.5px; }
+
+        .card {
+            background: var(--card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 18px;
+            margin-bottom: 12px;
+        }
+
+        .label {
+            font-size: 9.5px;
+            font-weight: 700;
+            color: var(--dim);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .segment {
+            display: flex;
+            background: #0a0f1c;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 12px;
+        }
+        .segment button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            color: var(--dim);
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .segment button.active {
+            background: var(--accent);
+            color: #064e3b;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .input-row.tri { grid-template-columns: 1fr 1fr 1fr; }
+
+        select, input {
+            width: 100%;
+            height: 42px;
+            background: #0a0f1c;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: #fff;
+            padding: 0 12px;
+            font-size: 13px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        select option { background: #0a0f1c; }
+
+        .btn {
+            width: 100%;
+            height: 48px;
+            background: var(--accent);
+            color: #064e3b;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 8px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: opacity 0.2s;
+        }
+        .btn:active { opacity: 0.85; }
+
+        .res-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .res-item {
+            background: rgba(255,255,255,0.06);
+            padding: 12px;
+            border-radius: 14px;
+            border: 1px solid transparent;
+        }
+        .res-item.highlight {
+            border-color: var(--accent);
+            background: rgba(16, 185, 129, 0.15);
+        }
+        .res-item.time-highlight {
+            border-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.15);
+        }
+        .res-item span {
+            font-size: 9.5px;
+            color: var(--dim);
+            text-transform: uppercase;
+        }
+        .res-item b {
+            font-size: 17px;
+            display: block;
+            margin-top: 4px;
+        }
+        .res-item.highlight b, .res-item.time-highlight b {
+            font-size: 21px;
+        }
+
+        .cost-card {
+            background: #064e3b;
+            padding: 16px;
+            border-radius: 14px;
+            cursor: pointer;
+        }
+        .cost-card .total {
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .breakdown {
+            display: none;
+            margin-top: 10px;
+            padding: 12px;
+            background: rgba(0,0,0,0.35);
+            border-radius: 12px;
+            font-size: 12.5px;
+        }
+        .bd-row { display: flex; justify-content: space-between; padding: 4px 0; }
+
+        .warning {
+            background: #451a03;
+            color: #fcd34d;
+            font-size: 11px;
+            text-align: center;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #f59e0b;
+            margin-top: 12px;
+        }
+
+        .note { font-size: 10.5px; color: var(--dim); text-align: center; margin-top: 8px; }
+
+        .spec-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(16,185,129,0.1);
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 6px;
+            padding: 2px 7px;
+            font-size: 9.5px;
+            color: var(--accent);
+            font-weight: 700;
+            margin-left: 6px;
+        }
+
+        .spec-info {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .spec-info-item { text-align: center; }
+        .spec-info-item .si-val { font-size: 14px; font-weight: 700; color: var(--text); }
+        .spec-info-item .si-lbl { font-size: 9px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .connector-chip {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .c-ccs2 { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.4); }
+        .c-type2 { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.4); }
+        .c-gbt { background: rgba(250,204,21,0.15); color: #facc15; border: 1px solid rgba(250,204,21,0.4); }
+        .c-chademo { background: rgba(251,146,60,0.15); color: #fb923c; border: 1px solid rgba(251,146,60,0.4); }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1 class="brand">Calc+</h1>
+        <div class="slogan">EV Charging Calculator</div>
+    </div>
+
+    <div class="card">
+        <div style="margin-bottom:14px">
+            <label class="label">Category</label>
+            <div class="segment">
+                <button id="catCar" class="active" onclick="setCategory('car')">EV Car</button>
+                <button id="catBike" onclick="setCategory('bike')">EV Motorcycle</button>
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div><label class="label">Brand</label><select id="brand" onchange="loadModels()"></select></div>
+            <div><label class="label">Model</label><select id="model" onchange="updateSpecs()"></select></div>
+        </div>
+
+        <div class="spec-info" id="specInfoBar">
+            <div class="spec-info-item">
+                <div class="si-val" id="si-bat">-</div>
+                <div class="si-lbl">Battery</div>
+            </div>
+            <div class="spec-info-item">
+                <div class="si-val" id="si-ac">-</div>
+                <div class="si-lbl">Max AC</div>
+            </div>
+            <div class="spec-info-item">
+                <div class="si-val" id="si-dc">-</div>
+                <div class="si-lbl">Max DC</div>
+            </div>
+            <div class="spec-info-item">
+                <div class="si-val" id="si-range">-</div>
+                <div class="si-lbl">WLTP Range</div>
+            </div>
+            <div class="spec-info-item">
+                <div class="si-val" id="si-sock">-</div>
+                <div class="si-lbl">Connector</div>
+            </div>
+        </div>
+
+        <div class="input-row tri">
+            <div><label class="label">Battery (kWh)</label><input id="battery" readonly></div>
+            <div><label class="label">Start SoC (%)</label><input type="number" id="start" value="20" min="0" max="100"></div>
+            <div><label class="label">Target SoC (%)</label><input type="number" id="end" value="80" min="0" max="100"></div>
+        </div>
+
+        <div class="input-row">
+            <div id="typeBox">
+                <label class="label">Charger Type</label>
+                <div class="segment">
+                    <button id="acBtn" class="active" onclick="setChargeType('ac')">AC</button>
+                    <button id="dcBtn" onclick="setChargeType('dc')">DC</button>
+                </div>
+            </div>
+            <div>
+                <label class="label">Charger Power (kW)</label>
+                <input type="number" id="power" value="7" step="0.5" min="0.2">
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div>
+                <label class="label">Vehicle Connector</label>
+                <select id="socket" onchange="checkCompatibility()">
+                    <option value="CCS2">CCS2 (DC Fast)</option>
+                    <option value="Type2">Type 2 (AC)</option>
+                    <option value="GBT">GB/T (DC)</option>
+                    <option value="CHAdeMO">CHAdeMO</option>
+                </select>
+            </div>
+            <div>
+                <label class="label">Charging Location</label>
+                <div class="segment">
+                    <button id="homeBtn" class="active" onclick="setLocation('home')">Home</button>
+                    <button id="spkluBtn" onclick="setLocation('spklu')">SPKLU</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="vaBox" class="input-row" style="margin-top: -6px;">
+            <div>
+                <label class="label">PLN Capacity (VA)</label>
+                <select id="va">
+                    <option value="1300">1300 VA</option>
+                    <option value="2200">2200 VA</option>
+                    <option value="3500">3500 VA</option>
+                    <option value="5500" selected>5500 VA+</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn" onclick="calculate()">CALCULATE CHARGING ⚡</button>
+    </div>
+
+    <div id="resultArea" class="result-box card" style="display:none;">
+        <div class="res-grid">
+            <div class="res-item highlight"><span>Energy Needed</span><b id="resEnergy">-</b></div>
+            <div class="res-item time-highlight"><span>Estimated Duration</span><b id="resTime">-</b></div>
+            <div class="res-item"><span>Actual Power</span><b id="resRate">-</b></div>
+            <div class="res-item"><span>Estimated Range</span><b id="resRange">-</b></div>
+        </div>
+
+        <div class="cost-card" onclick="toggleBD()">
+            <div style="display:flex; justify-content:space-between; align-items:center">
+                <div>
+                    <span style="font-size:11px; color:#a7f3d0">Total Cost</span>
+                    <div id="resCost" class="total">Rp 0</div>
+                </div>
+                <div style="font-size:12px; opacity:0.8">Details ▾</div>
+            </div>
+            <div id="breakdown" class="breakdown">
+                <div class="bd-row"><span>Energy Cost</span><span id="bdBase"></span></div>
+                <div id="spkluOnly">
+                    <div class="bd-row"><span>Admin Fee</span><span id="bdAdmin"></span></div>
+                    <div class="bd-row"><span>VAT (11%)</span><span id="bdPpn"></span></div>
+                    <div class="bd-row"><span>PJU (5%)</span><span id="bdPju"></span></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="warn80" class="warning" style="display:none;">⚠️ Charging above 80% may accelerate long-term battery degradation.</div>
+        <div id="warnNoDC" class="warning" style="display:none; background:#1e1b4b; color:#a5b4fc; border-color:#6366f1;">ℹ️ This vehicle does not support DC Fast Charging. Switched to AC.</div>
+        <div class="note" id="effNote"></div>
+        <div id="adapterAlert" class="warning" style="display:none; background:#7f1d1d; border-color:#ef4444; color:#fca5a5;"></div>
+    </div>
+</div>
+
+<script>
+const db = {
+    car: {
+        "BYD": {
+            "atto1_dynamic":    { n: "Atto 1 Dynamic",      b: 49.92, ac: 7,   dc: 80,  r: 430, socket: "CCS2" },
+            "atto1_premium":    { n: "Atto 1 Premium",      b: 60.48, ac: 7,   dc: 80,  r: 510, socket: "CCS2" },
+            "atto3_std":        { n: "Atto 3 Standard",     b: 49.92, ac: 7,   dc: 80,  r: 345, socket: "CCS2" },
+            "atto3_ext":        { n: "Atto 3 Extended",     b: 60.48, ac: 7,   dc: 88,  r: 480, socket: "CCS2" },
+            "dolphin_std":      { n: "Dolphin Standard",    b: 38.44, ac: 6.6, dc: 60,  r: 340, socket: "CCS2" },
+            "dolphin_ext":      { n: "Dolphin Extended",    b: 44.9,  ac: 7,   dc: 60,  r: 410, socket: "CCS2" },
+            "seal_std":         { n: "Seal Standard",       b: 61.44, ac: 11,  dc: 100, r: 510, socket: "CCS2" },
+            "seal_perf":        { n: "Seal Performance",    b: 82.56, ac: 11,  dc: 150, r: 580, socket: "CCS2" },
+            "sealion6":         { n: "Sea Lion 6",          b: 71.8,  ac: 11,  dc: 150, r: 520, socket: "CCS2" },
+            "sealion7":         { n: "Sea Lion 7",          b: 71.8,  ac: 11,  dc: 150, r: 500, socket: "CCS2" },
+        },
+        "Wuling": {
+            "airev_lite":       { n: "Air EV Lite",         b: 17.3,  ac: 2.2, dc: 0,   r: 200, socket: "Type2" },
+            "airev_std":        { n: "Air EV Standard",     b: 26.7,  ac: 6.6, dc: 0,   r: 300, socket: "Type2" },
+            "airev_lrn":        { n: "Air EV Long Range",   b: 26.7,  ac: 6.6, dc: 0,   r: 300, socket: "Type2" },
+            "binguo_333_gbt":   { n: "Binguo 333km (GB/T)", b: 31.9,  ac: 6.6, dc: 40,  r: 333, socket: "GBT"   },
+            "binguo_410_gbt":   { n: "Binguo 410km (GB/T)", b: 37.9,  ac: 6.6, dc: 50,  r: 410, socket: "GBT"   },
+            "binguo_430":       { n: "New Binguo 430km",    b: 37.9,  ac: 7,   dc: 50,  r: 430, socket: "CCS2"  },
+            "cloud_460":        { n: "Cloud EV 460km",      b: 50.6,  ac: 7,   dc: 58,  r: 460, socket: "CCS2"  },
+        },
+        "Hyundai": {
+            "ioniq5_std":       { n: "Ioniq 5 Standard",    b: 58.0,  ac: 11,  dc: 100, r: 385, socket: "CCS2" },
+            "ioniq5_lr":        { n: "Ioniq 5 Long Range",  b: 72.6,  ac: 11,  dc: 150, r: 450, socket: "CCS2" },
+            "ioniq6_lr":        { n: "Ioniq 6 Long Range",  b: 77.4,  ac: 11,  dc: 150, r: 614, socket: "CCS2" },
+            "kona":             { n: "Kona Electric",        b: 64.8,  ac: 11,  dc: 100, r: 490, socket: "CCS2" },
+        },
+        "Kia": {
+            "ev6_std":          { n: "EV6 Standard",        b: 58.0,  ac: 11,  dc: 100, r: 394, socket: "CCS2" },
+            "ev6_lr":           { n: "EV6 Long Range",      b: 77.4,  ac: 11,  dc: 233, r: 528, socket: "CCS2" },
+            "ev9":              { n: "EV9",                  b: 99.8,  ac: 11,  dc: 233, r: 541, socket: "CCS2" },
+        },
+        "Chery": {
+            "omoda_e5":         { n: "Omoda E5",            b: 61.05, ac: 6.6, dc: 80,  r: 430, socket: "CCS2" },
+        },
+        "Neta": {
+            "neta_v_260":       { n: "Neta V 260km",        b: 38.54, ac: 6.6, dc: 0,   r: 260, socket: "CCS2" },
+            "neta_v_pro":       { n: "Neta V Pro 380km",    b: 38.54, ac: 6.6, dc: 40,  r: 380, socket: "CCS2" },
+            "neta_x":           { n: "Neta X 530km",        b: 64.0,  ac: 6.6, dc: 80,  r: 530, socket: "CCS2" },
+        },
+        "MG": {
+            "mg4_std":          { n: "MG4 Standard",        b: 51.0,  ac: 11,  dc: 90,  r: 350, socket: "CCS2" },
+            "mg4_lr":           { n: "MG4 Long Range",      b: 64.0,  ac: 11,  dc: 135, r: 435, socket: "CCS2" },
+            "zs_ev":            { n: "ZS EV",               b: 51.1,  ac: 7,   dc: 76,  r: 440, socket: "CCS2" },
+        },
+        "Toyota": {
+            "bz4x_fwd":         { n: "bZ4X FWD",            b: 71.4,  ac: 6.6, dc: 100, r: 516, socket: "CCS2" },
+            "bz4x_awd":         { n: "bZ4X AWD",            b: 72.8,  ac: 6.6, dc: 100, r: 460, socket: "CCS2" },
+        },
+        "Lexus": {
+            "ux300e":           { n: "UX 300e",             b: 72.8,  ac: 6.6, dc: 50,  r: 450, socket: "CCS2" },
+            "rz450e":           { n: "RZ 450e",             b: 71.4,  ac: 11,  dc: 150, r: 440, socket: "CCS2" },
+        },
+        "MINI": {
+            "cooper_se":        { n: "Cooper SE",           b: 32.6,  ac: 11,  dc: 50,  r: 230, socket: "CCS2" },
+            "countryman_se":    { n: "Countryman SE",       b: 64.7,  ac: 11,  dc: 130, r: 462, socket: "CCS2" },
+        },
+        "BMW": {
+            "i3":               { n: "i3",                  b: 42.2,  ac: 11,  dc: 50,  r: 285, socket: "CCS2" },
+            "ix1":              { n: "iX1",                 b: 64.7,  ac: 11,  dc: 130, r: 438, socket: "CCS2" },
+            "ix3":              { n: "iX3",                 b: 74.0,  ac: 11,  dc: 150, r: 461, socket: "CCS2" },
+        },
+        "Volvo": {
+            "c40":              { n: "C40 Recharge",        b: 69.0,  ac: 11,  dc: 150, r: 438, socket: "CCS2" },
+            "ex30":             { n: "EX30",                b: 51.0,  ac: 11,  dc: 153, r: 344, socket: "CCS2" },
+        },
+        "Zeekr": {
+            "001":              { n: "001",                 b: 100.0, ac: 11,  dc: 200, r: 590, socket: "CCS2" },
+            "x":                { n: "X",                   b: 66.0,  ac: 11,  dc: 150, r: 440, socket: "CCS2" },
+        },
+    },
+    bike: {
+        "Alva": {
+            "n3":               { n: "N3 (2024)",           b: 3.6,   ac: 0.5, dc: 4.0, r: 140, socket: "Type2" },
+            "n3_nextgen":       { n: "N3 Next Gen (2026)",  b: 3.3,   ac: 0.5, dc: 4.0, r: 140, socket: "Type2" },
+            "cervo":            { n: "Cervo",               b: 3.6,   ac: 1.5, dc: 0,   r: 125, socket: "Type2" },
+            "cervo_x":          { n: "Cervo X",             b: 3.6,   ac: 1.5, dc: 0,   r: 125, socket: "Type2" },
+            "one_xp":           { n: "ONE XP",              b: 5.0,   ac: 2.0, dc: 0,   r: 150, socket: "Type2" },
+        },
+        "Gesits": {
+            "g1":               { n: "G1",                  b: 2.88,  ac: 1.2, dc: 0,   r: 80,  socket: "Type2" },
+            "g1s":              { n: "G1S",                 b: 4.0,   ac: 1.5, dc: 0,   r: 110, socket: "Type2" },
+        },
+        "Honda": {
+            "em1":              { n: "EM1 e:",               b: 1.5,   ac: 0.27,dc: 0,   r: 48,  socket: "Type2" },
+        },
+        "Volta": {
+            "virgo":            { n: "Virgo",               b: 2.9,   ac: 0.8, dc: 0,   r: 60,  socket: "Type2" },
+        },
+        "Polytron": {
+            "fox_r":            { n: "Fox R",               b: 1.23,  ac: 0.5, dc: 0,   r: 60,  socket: "Type2" },
+        },
+        "Smoot": {
+            "zuzu":             { n: "Zuzu",                b: 2.88,  ac: 0.8, dc: 0,   r: 80,  socket: "Type2" },
+            "tempur":           { n: "Tempur",              b: 1.44,  ac: 0.5, dc: 0,   r: 70,  socket: "Type2" },
+        },
+        "Viar": {
+            "q1":               { n: "Q1",                  b: 1.5,   ac: 0.5, dc: 0,   r: 55,  socket: "Type2" },
+        },
+        "United": {
+            "tx3000":           { n: "TX3000",              b: 2.88,  ac: 1.2, dc: 0,   r: 70,  socket: "Type2" },
+            "ms3":              { n: "MS3",                 b: 4.0,   ac: 1.5, dc: 0,   r: 100, socket: "Type2" },
+        },
+    }
+};
+
+let curCat = 'car', chgType = 'ac', loc = 'home';
+
+function setCategory(c) {
+    curCat = c;
+    document.getElementById('catCar').classList.toggle('active', c === 'car');
+    document.getElementById('catBike').classList.toggle('active', c === 'bike');
+    const typeBox = document.getElementById('typeBox');
+    if (c === 'bike') {
+        typeBox.style.opacity = '0.4';
+        typeBox.style.pointerEvents = 'none';
+        chgType = 'ac';
+        document.getElementById('acBtn').classList.add('active');
+        document.getElementById('dcBtn').classList.remove('active');
+    } else {
+        typeBox.style.opacity = '1';
+        typeBox.style.pointerEvents = 'auto';
+    }
+    const brandSel = document.getElementById('brand');
+    brandSel.innerHTML = '';
+    Object.keys(db[c]).sort().forEach(b => brandSel.add(new Option(b, b)));
+    loadModels();
+}
+
+function loadModels() {
+    const brand = document.getElementById('brand').value;
+    const modelSel = document.getElementById('model');
+    modelSel.innerHTML = '';
+    if (db[curCat][brand]) {
+        Object.keys(db[curCat][brand]).forEach(key => {
+            modelSel.add(new Option(db[curCat][brand][key].n, key));
+        });
+    }
+    updateSpecs();
+}
+
+function updateSpecs() {
+    const brand = document.getElementById('brand').value;
+    const model = document.getElementById('model').value;
+    if (!brand || !model || !db[curCat][brand] || !db[curCat][brand][model]) return;
+    const spec = db[curCat][brand][model];
+    document.getElementById('battery').value = spec.b + " kWh";
+    document.getElementById('si-bat').textContent = spec.b + " kWh";
+    document.getElementById('si-ac').textContent = spec.ac + " kW";
+    document.getElementById('si-dc').textContent = spec.dc > 0 ? spec.dc + " kW" : "–";
+    document.getElementById('si-range').textContent = "~" + spec.r + " km";
+    const sockEl = document.getElementById('si-sock');
+    const sockClass = { CCS2: 'c-ccs2', Type2: 'c-type2', GBT: 'c-gbt', CHAdeMO: 'c-chademo' }[spec.socket] || 'c-ccs2';
+    sockEl.innerHTML = `<span class="connector-chip ${sockClass}">${spec.socket}</span>`;
+    document.getElementById('power').value = chgType === 'ac' ? spec.ac : (spec.dc > 0 ? spec.dc : spec.ac);
+    if (['CCS2','Type2','GBT','CHAdeMO'].includes(spec.socket)) document.getElementById('socket').value = spec.socket;
+    checkCompatibility();
+}
+
+function setChargeType(t) {
+    chgType = t;
+    document.getElementById('acBtn').classList.toggle('active', t === 'ac');
+    document.getElementById('dcBtn').classList.toggle('active', t === 'dc');
+    updateSpecs();
+}
+
+function setLocation(l) {
+    loc = l;
+    document.getElementById('homeBtn').classList.toggle('active', l === 'home');
+    document.getElementById('spkluBtn').classList.toggle('active', l === 'spklu');
+    document.getElementById('vaBox').style.visibility = (l === 'home') ? 'visible' : 'hidden';
+}
+
+function checkCompatibility() {
+    const brand = document.getElementById('brand').value;
+    const model = document.getElementById('model').value;
+    if (!brand || !model || !db[curCat][brand] || !db[curCat][brand][model]) return;
+    const vehicleSocket = db[curCat][brand][model].socket;
+    const selectedSocket = document.getElementById('socket').value;
+    const alertBox = document.getElementById('adapterAlert');
+    if (vehicleSocket && selectedSocket !== vehicleSocket) {
+        alertBox.style.display = 'block';
+        alertBox.textContent = `⚠️ Connector mismatch! Vehicle uses ${vehicleSocket}, charger uses ${selectedSocket}. An adapter/converter may be required.`;
+    } else {
+        alertBox.style.display = 'none';
+    }
+}
+
+function getEfficiency(power, type) {
+    if (type === 'dc') return 0.94;
+    if (power <= 3.3) return 0.84;
+    if (power <= 7) return 0.87;
+    if (power <= 11) return 0.90;
+    return 0.92;
+}
+
+function calculate() {
+    const brand = document.getElementById('brand').value;
+    const model = document.getElementById('model').value;
+    if (!brand || !model || !db[curCat][brand] || !db[curCat][brand][model]) {
+        alert("Please select brand and model first");
+        return;
+    }
+    const spec = db[curCat][brand][model];
+    const start = Math.min(100, Math.max(0, parseInt(document.getElementById('start').value) || 20));
+    const end   = Math.min(100, Math.max(0, parseInt(document.getElementById('end').value)   || 80));
+    if (end <= start) { alert("Target SoC must be greater than Start SoC."); return; }
+    const warnNoDC = document.getElementById('warnNoDC');
+    let actualChgType = chgType;
+    if (chgType === 'dc' && spec.dc === 0) {
+        warnNoDC.style.display = 'block';
+        actualChgType = 'ac';
+    } else {
+        warnNoDC.style.display = 'none';
+    }
+    const maxVehiclePower = actualChgType === 'ac' ? spec.ac : spec.dc;
+    const powerInput = parseFloat(document.getElementById('power').value) || 7;
+    const actualPower = Math.min(powerInput, maxVehiclePower);
+    const efficiency = getEfficiency(actualPower, actualChgType);
+    const energy = spec.b * (end - start) / 100;
+    const energyFromGrid = energy / efficiency;
+    const hours = energyFromGrid / actualPower;
+    let baseRate = 0, admin = 0, ppn = 0, pju = 0;
+    if (loc === 'home') {
+        const va = parseInt(document.getElementById('va').value);
+        baseRate = (va <= 2200) ? 1444.7 : 1699.5;
+    } else {
+        baseRate = (actualChgType === 'ac') ? 1650 : 2466;
+        admin = 4000;
+        const subtotal = energyFromGrid * baseRate + admin;
+        ppn = subtotal * 0.11;
+        pju = subtotal * 0.05;
+    }
+    const totalCost = energyFromGrid * baseRate + admin + ppn + pju;
+    document.getElementById('resEnergy').innerText = energy.toFixed(2) + " kWh";
+    const hh = Math.floor(hours);
+    const mm = Math.round((hours - hh) * 60);
+    document.getElementById('resTime').innerText = hh + "h " + mm + "m";
+    document.getElementById('resRate').innerText = actualPower.toFixed(1) + " kW";
+    document.getElementById('resRange').innerText = "~" + Math.round((end / 100) * spec.r) + " km";
+    document.getElementById('resCost').innerText = "Rp " + Math.round(totalCost).toLocaleString('id-ID');
+    document.getElementById('bdBase').innerText = "Rp " + Math.round(energyFromGrid * baseRate).toLocaleString('id-ID');
+    document.getElementById('bdAdmin').innerText = "Rp " + admin.toLocaleString('id-ID');
+    document.getElementById('bdPpn').innerText = "Rp " + Math.round(ppn).toLocaleString('id-ID');
+    document.getElementById('bdPju').innerText = "Rp " + Math.round(pju).toLocaleString('id-ID');
+    document.getElementById('spkluOnly').style.display = (loc === 'spklu') ? 'block' : 'none';
+    document.getElementById('resultArea').style.display = 'block';
+    document.getElementById('warn80').style.display = (end > 80) ? 'block' : 'none';
+    document.getElementById('effNote').innerText = `Charging efficiency ≈ ${Math.round(efficiency * 100)}% · From grid: ${energyFromGrid.toFixed(2)} kWh`;
+    checkCompatibility();
+    document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleBD() {
+    const bd = document.getElementById('breakdown');
+    bd.style.display = (bd.style.display === 'block') ? 'none' : 'block';
+}
+
+window.onload = () => { setCategory('car'); };
+</script>
+</body>
+</html>
