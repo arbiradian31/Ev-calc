@@ -209,6 +209,7 @@
         .spec-info-item .si-val { font-size: 14px; font-weight: 700; color: var(--text); }
         .spec-info-item .si-lbl { font-size: 9px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; }
 
+        /* connector chip */
         .connector-chip {
             display: inline-block;
             padding: 2px 8px;
@@ -243,6 +244,7 @@
             <div><label class="label">Model</label><select id="model" onchange="updateSpecs()"></select></div>
         </div>
 
+        <!-- Spec Info Bar -->
         <div class="spec-info" id="specInfoBar">
             <div class="spec-info-item">
                 <div class="si-val" id="si-bat">-</div>
@@ -354,27 +356,39 @@
 </div>
 
 <script>
+// ============================================================
+// DATABASE KENDARAAN EV INDONESIA 2024-2026
+// Format: { n: nama, b: kapasitas_baterai_kWh, ac: max_AC_kW, dc: max_DC_kW (0=tidak ada), r: range_km_WLTP/NEDC, socket: tipe_konektor }
+// ============================================================
 const db = {
     car: {
         "BYD": {
-            "atto1_dynamic":    { n: "Atto 1 Dynamic",      b: 49.92, ac: 7,   dc: 80,  r: 430, socket: "CCS2" },
-            "atto1_premium":    { n: "Atto 1 Premium",      b: 60.48, ac: 7,   dc: 80,  r: 510, socket: "CCS2" },
+            // Atto 1
+            "atto1_dynamic":    { n: "Atto 1 Dynamic",      b: 30.08, ac: 6.6, dc: 30,  r: 300, socket: "CCS2" },
+            "atto1_premium":    { n: "Atto 1 Premium",      b: 38.88, ac: 6.6, dc: 40,  r: 380, socket: "CCS2" },
+            // Atto 3
             "atto3_std":        { n: "Atto 3 Standard",     b: 49.92, ac: 7,   dc: 80,  r: 345, socket: "CCS2" },
             "atto3_ext":        { n: "Atto 3 Extended",     b: 60.48, ac: 7,   dc: 88,  r: 480, socket: "CCS2" },
+            // Dolphin
             "dolphin_std":      { n: "Dolphin Standard",    b: 38.44, ac: 6.6, dc: 60,  r: 340, socket: "CCS2" },
             "dolphin_ext":      { n: "Dolphin Extended",    b: 44.9,  ac: 7,   dc: 60,  r: 410, socket: "CCS2" },
+            // Seal
             "seal_std":         { n: "Seal Standard",       b: 61.44, ac: 11,  dc: 100, r: 510, socket: "CCS2" },
             "seal_perf":        { n: "Seal Performance",    b: 82.56, ac: 11,  dc: 150, r: 580, socket: "CCS2" },
+            // Sea Lion
             "sealion6":         { n: "Sea Lion 6",          b: 71.8,  ac: 11,  dc: 150, r: 520, socket: "CCS2" },
             "sealion7":         { n: "Sea Lion 7",          b: 71.8,  ac: 11,  dc: 150, r: 500, socket: "CCS2" },
         },
         "Wuling": {
+            // Air EV
             "airev_lite":       { n: "Air EV Lite",         b: 17.3,  ac: 2.2, dc: 0,   r: 200, socket: "Type2" },
             "airev_std":        { n: "Air EV Standard",     b: 26.7,  ac: 6.6, dc: 0,   r: 300, socket: "Type2" },
             "airev_lrn":        { n: "Air EV Long Range",   b: 26.7,  ac: 6.6, dc: 0,   r: 300, socket: "Type2" },
+            // Binguo
             "binguo_333_gbt":   { n: "Binguo 333km (GB/T)", b: 31.9,  ac: 6.6, dc: 40,  r: 333, socket: "GBT"   },
             "binguo_410_gbt":   { n: "Binguo 410km (GB/T)", b: 37.9,  ac: 6.6, dc: 50,  r: 410, socket: "GBT"   },
             "binguo_430":       { n: "New Binguo 430km",    b: 37.9,  ac: 7,   dc: 50,  r: 430, socket: "CCS2"  },
+            // Cloud
             "cloud_460":        { n: "Cloud EV 460km",      b: 50.6,  ac: 7,   dc: 58,  r: 460, socket: "CCS2"  },
         },
         "Hyundai": {
@@ -429,11 +443,14 @@ const db = {
     },
     bike: {
         "Alva": {
-            "n3":               { n: "N3 (2024)",           b: 3.6,   ac: 0.5, dc: 4.0, r: 140, socket: "Type2" },
-            "n3_nextgen":       { n: "N3 Next Gen (2026)",  b: 3.3,   ac: 0.5, dc: 4.0, r: 140, socket: "Type2" },
-            "cervo":            { n: "Cervo",               b: 3.6,   ac: 1.5, dc: 0,   r: 125, socket: "Type2" },
-            "cervo_x":          { n: "Cervo X",             b: 3.6,   ac: 1.5, dc: 0,   r: 125, socket: "Type2" },
-            "one_xp":           { n: "ONE XP",              b: 5.0,   ac: 2.0, dc: 0,   r: 150, socket: "Type2" },
+            // N3 original (2024): 2x removable batteries, 1.8 kWh each = 3.6 kWh total
+            // Normal charge: 0.5 kW/battery, Boost Charge: 4 kW (via Alva Boost Station)
+            "n3":               { n: "N3 (2024)",              b: 3.6,   ac: 0.5, dc: 4.0, r: 140, socket: "Type2" },
+            // N3 Next Gen (IIMS 2026): single LFP battery 3.3 kWh, Boost Charge upgraded
+            "n3_nextgen":       { n: "N3 Next Gen (2026)",     b: 3.3,   ac: 0.5, dc: 4.0, r: 140, socket: "Type2" },
+            "cervo":            { n: "Cervo",                  b: 3.6,   ac: 1.5, dc: 0,   r: 125, socket: "Type2" },
+            "cervo_x":          { n: "Cervo X",                b: 3.6,   ac: 1.5, dc: 0,   r: 125, socket: "Type2" },
+            "one_xp":           { n: "ONE XP",                 b: 5.0,   ac: 2.0, dc: 0,   r: 150, socket: "Type2" },
         },
         "Gesits": {
             "g1":               { n: "G1",                  b: 2.88,  ac: 1.2, dc: 0,   r: 80,  socket: "Type2" },
@@ -468,6 +485,7 @@ function setCategory(c) {
     curCat = c;
     document.getElementById('catCar').classList.toggle('active', c === 'car');
     document.getElementById('catBike').classList.toggle('active', c === 'bike');
+
     const typeBox = document.getElementById('typeBox');
     if (c === 'bike') {
         typeBox.style.opacity = '0.4';
@@ -479,9 +497,12 @@ function setCategory(c) {
         typeBox.style.opacity = '1';
         typeBox.style.pointerEvents = 'auto';
     }
+
     const brandSel = document.getElementById('brand');
     brandSel.innerHTML = '';
-    Object.keys(db[c]).sort().forEach(b => brandSel.add(new Option(b, b)));
+    Object.keys(db[c]).sort().forEach(b => {
+        brandSel.add(new Option(b, b));
+    });
     loadModels();
 }
 
@@ -489,9 +510,11 @@ function loadModels() {
     const brand = document.getElementById('brand').value;
     const modelSel = document.getElementById('model');
     modelSel.innerHTML = '';
+
     if (db[curCat][brand]) {
         Object.keys(db[curCat][brand]).forEach(key => {
-            modelSel.add(new Option(db[curCat][brand][key].n, key));
+            let spec = db[curCat][brand][key];
+            modelSel.add(new Option(spec.n, key));
         });
     }
     updateSpecs();
@@ -501,17 +524,32 @@ function updateSpecs() {
     const brand = document.getElementById('brand').value;
     const model = document.getElementById('model').value;
     if (!brand || !model || !db[curCat][brand] || !db[curCat][brand][model]) return;
+
     const spec = db[curCat][brand][model];
     document.getElementById('battery').value = spec.b + " kWh";
+
+    // Update spec info bar
     document.getElementById('si-bat').textContent = spec.b + " kWh";
     document.getElementById('si-ac').textContent = spec.ac + " kW";
     document.getElementById('si-dc').textContent = spec.dc > 0 ? spec.dc + " kW" : "–";
     document.getElementById('si-range').textContent = "~" + spec.r + " km";
+
     const sockEl = document.getElementById('si-sock');
     const sockClass = { CCS2: 'c-ccs2', Type2: 'c-type2', GBT: 'c-gbt', CHAdeMO: 'c-chademo' }[spec.socket] || 'c-ccs2';
     sockEl.innerHTML = `<span class="connector-chip ${sockClass}">${spec.socket}</span>`;
-    document.getElementById('power').value = chgType === 'ac' ? spec.ac : (spec.dc > 0 ? spec.dc : spec.ac);
-    if (['CCS2','Type2','GBT','CHAdeMO'].includes(spec.socket)) document.getElementById('socket').value = spec.socket;
+
+    // Set charger power based on type
+    if (chgType === 'ac') {
+        document.getElementById('power').value = spec.ac;
+    } else {
+        document.getElementById('power').value = spec.dc > 0 ? spec.dc : spec.ac;
+    }
+
+    // Set socket
+    if (['CCS2','Type2','GBT','CHAdeMO'].includes(spec.socket)) {
+        document.getElementById('socket').value = spec.socket;
+    }
+
     checkCompatibility();
 }
 
@@ -533,8 +571,10 @@ function checkCompatibility() {
     const brand = document.getElementById('brand').value;
     const model = document.getElementById('model').value;
     if (!brand || !model || !db[curCat][brand] || !db[curCat][brand][model]) return;
+
     const vehicleSocket = db[curCat][brand][model].socket;
     const selectedSocket = document.getElementById('socket').value;
+
     const alertBox = document.getElementById('adapterAlert');
     if (vehicleSocket && selectedSocket !== vehicleSocket) {
         alertBox.style.display = 'block';
@@ -559,10 +599,17 @@ function calculate() {
         alert("Please select brand and model first");
         return;
     }
+
     const spec = db[curCat][brand][model];
     const start = Math.min(100, Math.max(0, parseInt(document.getElementById('start').value) || 20));
     const end   = Math.min(100, Math.max(0, parseInt(document.getElementById('end').value)   || 80));
-    if (end <= start) { alert("Target SoC must be greater than Start SoC."); return; }
+
+    if (end <= start) {
+        alert("Target SoC must be greater than Start SoC.");
+        return;
+    }
+
+    // DC support check
     const warnNoDC = document.getElementById('warnNoDC');
     let actualChgType = chgType;
     if (chgType === 'dc' && spec.dc === 0) {
@@ -571,18 +618,23 @@ function calculate() {
     } else {
         warnNoDC.style.display = 'none';
     }
+
     const maxVehiclePower = actualChgType === 'ac' ? spec.ac : spec.dc;
     const powerInput = parseFloat(document.getElementById('power').value) || 7;
     const actualPower = Math.min(powerInput, maxVehiclePower);
     const efficiency = getEfficiency(actualPower, actualChgType);
+
     const energy = spec.b * (end - start) / 100;
     const energyFromGrid = energy / efficiency;
     const hours = energyFromGrid / actualPower;
+
+    // Cost calculation
     let baseRate = 0, admin = 0, ppn = 0, pju = 0;
     if (loc === 'home') {
         const va = parseInt(document.getElementById('va').value);
         baseRate = (va <= 2200) ? 1444.7 : 1699.5;
     } else {
+        // Tarif SPKLU PLN 2024
         baseRate = (actualChgType === 'ac') ? 1650 : 2466;
         admin = 4000;
         const subtotal = energyFromGrid * baseRate + admin;
@@ -590,6 +642,8 @@ function calculate() {
         pju = subtotal * 0.05;
     }
     const totalCost = energyFromGrid * baseRate + admin + ppn + pju;
+
+    // Display results
     document.getElementById('resEnergy').innerText = energy.toFixed(2) + " kWh";
     const hh = Math.floor(hours);
     const mm = Math.round((hours - hh) * 60);
@@ -597,15 +651,20 @@ function calculate() {
     document.getElementById('resRate').innerText = actualPower.toFixed(1) + " kW";
     document.getElementById('resRange').innerText = "~" + Math.round((end / 100) * spec.r) + " km";
     document.getElementById('resCost').innerText = "Rp " + Math.round(totalCost).toLocaleString('id-ID');
+
     document.getElementById('bdBase').innerText = "Rp " + Math.round(energyFromGrid * baseRate).toLocaleString('id-ID');
     document.getElementById('bdAdmin').innerText = "Rp " + admin.toLocaleString('id-ID');
     document.getElementById('bdPpn').innerText = "Rp " + Math.round(ppn).toLocaleString('id-ID');
     document.getElementById('bdPju').innerText = "Rp " + Math.round(pju).toLocaleString('id-ID');
+
     document.getElementById('spkluOnly').style.display = (loc === 'spklu') ? 'block' : 'none';
     document.getElementById('resultArea').style.display = 'block';
     document.getElementById('warn80').style.display = (end > 80) ? 'block' : 'none';
     document.getElementById('effNote').innerText = `Charging efficiency ≈ ${Math.round(efficiency * 100)}% · From grid: ${energyFromGrid.toFixed(2)} kWh`;
+
     checkCompatibility();
+
+    // Scroll to result
     document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -614,7 +673,10 @@ function toggleBD() {
     bd.style.display = (bd.style.display === 'block') ? 'none' : 'block';
 }
 
-window.onload = () => { setCategory('car'); };
+// Initialize
+window.onload = () => {
+    setCategory('car');
+};
 </script>
 </body>
 </html>
